@@ -1,15 +1,20 @@
 ﻿using DomainModels;
 using Integrations.Common;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace Integrations.Bitfinex
 {
     public class BitfinexBitcoinPriceFetcher : IBitcoinPriceFetcher
     {
+        private readonly ILogger<BitfinexBitcoinPriceFetcher> _logger;
         private readonly HttpClient _httpClient;
 
-        public BitfinexBitcoinPriceFetcher(IHttpClientFactory httpClientFactory)
+        public BitfinexBitcoinPriceFetcher(
+            ILogger<BitfinexBitcoinPriceFetcher> logger,
+            IHttpClientFactory httpClientFactory)
         {
+            _logger = logger;
             _httpClient = httpClientFactory.CreateClient(nameof(BitfinexBitcoinPriceFetcher));
         }
 
@@ -22,7 +27,8 @@ namespace Integrations.Bitfinex
 
             if (!response.IsSuccessStatusCode)
             {
-                // logs
+                _logger.LogError($"Time point={timePoint.ToUnixTimeMilliseconds()}. Request failed with status code: {response.StatusCode}. {response.ReasonPhrase}.");
+
                 throw new IntegrationException(
                     $"Request failed with status code: {response.StatusCode}. {response.ReasonPhrase}.");
             }
@@ -33,8 +39,9 @@ namespace Integrations.Bitfinex
 
             if (responseData.Length != 1 || responseData[0].Length != 6)
             {
-                // logs
-                throw new IntegrationException($"Wrong data.");
+                _logger.LogWarning($"Time point={timePoint.ToUnixTimeMilliseconds()}.Unexpected data format. Should be array of arrays with lengths 1 and 6.");
+
+                throw new IntegrationException($"Unexpected data format.");
             }
 
             return new Candle

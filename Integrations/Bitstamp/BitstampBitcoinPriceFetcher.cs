@@ -1,15 +1,20 @@
 ﻿using DomainModels;
 using Integrations.Common;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace Integrations.Bitstamp
 {
     public class BitstampBitcoinPriceFetcher : IBitcoinPriceFetcher
     {
+        private readonly ILogger<BitstampBitcoinPriceFetcher> _logger;
         private readonly HttpClient _httpClient;
 
-        public BitstampBitcoinPriceFetcher(IHttpClientFactory httpClientFactory)
+        public BitstampBitcoinPriceFetcher(
+            ILogger<BitstampBitcoinPriceFetcher> logger, 
+            IHttpClientFactory httpClientFactory)
         {
+            _logger = logger;
             _httpClient = httpClientFactory.CreateClient(nameof(BitstampBitcoinPriceFetcher));
         }
 
@@ -22,7 +27,8 @@ namespace Integrations.Bitstamp
 
             if (!response.IsSuccessStatusCode)
             {
-                // logs
+                _logger.LogError($"Time point={timePoint.ToUnixTimeSeconds()}. Request failed with status code: {response.StatusCode}. {response.ReasonPhrase}.");
+
                 throw new IntegrationException(
                     $"Request failed with status code: {response.StatusCode}. {response.ReasonPhrase}.");
             }
@@ -32,13 +38,15 @@ namespace Integrations.Bitstamp
 
             if (responseData == null || responseData.Data == null)
             {
-                // logs
+                _logger.LogWarning($"Time point={timePoint.ToUnixTimeSeconds()}. Deserialization failed or response is empty.");
+
                 throw new IntegrationException($"Deserialization failed or response is empty.");
             }
 
             if (responseData.Data.Ohlc == null || !responseData.Data.Ohlc.Any())
             {
-                // logs
+                _logger.LogWarning($"Time point={timePoint.ToUnixTimeSeconds()}. No data for {responseData.Data.Pair}.");
+
                 throw new IntegrationException($"No data for {responseData.Data.Pair}.");
             }
 
@@ -46,7 +54,8 @@ namespace Integrations.Bitstamp
 
             if (responseData.Data.Ohlc.Count > 1)
             {
-                // logs
+                _logger.LogWarning($"Time point={timePoint.ToUnixTimeSeconds()}. More date than should be.");
+
                 throw new IntegrationException($"More date than should be.");
             }
 
@@ -61,11 +70,11 @@ namespace Integrations.Bitstamp
             };
         }
 
-        private static decimal TryParseValue(string value, string fieldName)
+        private decimal TryParseValue(string value, string fieldName)
         {
             if (!decimal.TryParse(value, out var parsedValue))
             {
-                // logs 
+                _logger.LogError($"Can't parse {fieldName} value: {value}.");
 
                 throw new IntegrationException($"Can't parse {fieldName} value: {value}.");
             }

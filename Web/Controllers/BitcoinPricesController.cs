@@ -5,20 +5,19 @@ using Microsoft.AspNetCore.Mvc;
 namespace Web.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
-    public class BitcoinPriceController : Controller
+    [Route("api/v1/[controller]")]
+    public class BitcoinPricesController : Controller
     {
         private readonly IBitcoinPriceService _bitcoinPriceService;
 
-        public BitcoinPriceController(IBitcoinPriceService bitcoinPriceService)
+        public BitcoinPricesController(IBitcoinPriceService bitcoinPriceService)
         {
             _bitcoinPriceService = bitcoinPriceService;
         }
 
-        [HttpGet]
-        [Route("GetPrice")]
+        [HttpGet("{timePoint}")]
         [CleanUpMinutesSeconds]
-        public async Task<ActionResult<IBitcoinPrice>> Get([FromQuery] DateTimeOffset timePoint)
+        public async Task<ActionResult<IBitcoinPrice>> Get(DateTimeOffset timePoint)
         {
             if (timePoint > DateTimeOffset.UtcNow)
             {
@@ -29,14 +28,13 @@ namespace Web.Controllers
 
             if (price == null)
             {
-                return StatusCode(500, $"Internal Server Error");
+                return StatusCode(503, $"Source of data unavailable or returns empty result.");
             }
 
             return Ok(price);
         }
 
         [HttpGet]
-        [Route("GetPrices")]
         [CleanUpMinutesSeconds]
         public async Task<ActionResult<IReadOnlyCollection<IBitcoinPrice>>> GetList(
             [FromQuery] DateTimeOffset startTimePoint, [FromQuery] DateTimeOffset endTimePoint)

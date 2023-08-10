@@ -1,19 +1,25 @@
 ﻿using Application.Abstractions;
 using DomainModels;
 using Integrations.Common;
+using Microsoft.Extensions.Logging;
 using Persistance;
 
 namespace Application.Implementations
 {
     internal class BitcoinPriceService : IBitcoinPriceService
     {
+        private readonly ILogger<BitcoinPriceService> _logger;
         private readonly IBitcoinPriceDataStore _dataStore;
         private readonly IDataAggregator _dataAggregator;
         private readonly IEnumerable<IBitcoinPriceFetcher> _dataFetchers;
 
-        public BitcoinPriceService(IBitcoinPriceDataStore dataStore, IDataAggregator dataAggregator,
+        public BitcoinPriceService(
+            ILogger<BitcoinPriceService> logger,
+            IBitcoinPriceDataStore dataStore, 
+            IDataAggregator dataAggregator,
             IEnumerable<IBitcoinPriceFetcher> dataFetchers)
         {
+            _logger = logger;
             _dataStore = dataStore;
             _dataFetchers = dataFetchers;
             _dataAggregator = dataAggregator;
@@ -45,13 +51,13 @@ namespace Application.Implementations
             }
             catch (IntegrationException ex)
             {
-                // logs
+                _logger.LogError(ex, ex.Message);
 
                 return null;
             }
             catch (Exception ex)
             {
-                // logs
+                _logger.LogError(ex, ex.Message);
 
                 return null;
             }
@@ -60,6 +66,8 @@ namespace Application.Implementations
 
             if (!candles.Any())
             {
+                _logger.LogWarning($"No data to aggregate");
+
                 return null;
             }
 
