@@ -1,0 +1,1 @@
+To run application open JobInterview_2020_08.sln and run as Web or IIS.

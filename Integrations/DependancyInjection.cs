@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Integrations
 {
-    public static class DependancyInjection 
+    public static partial class DependancyInjection 
     {
         public static void AddIntegrations(this IServiceCollection services, IConfiguration configuration)
         {
@@ -37,13 +37,6 @@ namespace Integrations
                 }
                 client.BaseAddress = new Uri(baseUrl);
             });
-        }
-
-        public class ConfigurationException : Exception
-        {
-            public ConfigurationException(string message) : base(message)
-            {
-            }
         }
     }
 }

@@ -65,6 +65,8 @@ namespace Integrations.Bitstamp
         {
             if (!decimal.TryParse(value, out var parsedValue))
             {
+                // logs 
+
                 throw new IntegrationException($"Can't parse {fieldName} value: {value}.");
             }
             return parsedValue;

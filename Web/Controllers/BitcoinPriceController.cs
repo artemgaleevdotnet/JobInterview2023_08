@@ -35,7 +35,8 @@ namespace Web.Controllers
             return Ok(price);
         }
 
-        [HttpGet("GetPrices")]
+        [HttpGet]
+        [Route("GetPrices")]
         [CleanUpMinutesSeconds]
         public async Task<ActionResult<IReadOnlyCollection<IBitcoinPrice>>> GetList(
             [FromQuery] DateTimeOffset startTimePoint, [FromQuery] DateTimeOffset endTimePoint)

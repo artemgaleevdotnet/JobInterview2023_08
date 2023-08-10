@@ -24,11 +24,11 @@ namespace Application.Implementations
 
         public async Task<IBitcoinPrice?> GetPriceAsync(DateTimeOffset timePoint)
         {
-            var prices = await GetPricesAsync(timePoint, timePoint);
+            var price = await _dataStore.GetPriceAsync(timePoint);
 
-            if (prices.Any())
+            if (price != null)
             {
-                return prices.Single();
+                return price;
             }
 
             var tasks = _dataFetchers.Select(dataFetcher => dataFetcher.GetCandle(timePoint)).ToArray();
@@ -63,11 +63,11 @@ namespace Application.Implementations
                 return null;
             }
 
-            var price = _dataAggregator.Aggregate(candles.ToArray());
+            var aggregatedPrice = _dataAggregator.Aggregate(candles.ToArray());
 
             var bitcoinPrice = new BitcoinPrice
             {
-                Price = price,
+                Price = aggregatedPrice,
                 TimePoint = timePoint
             };
 
